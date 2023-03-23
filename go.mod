@@ -3,6 +3,7 @@ module github.com/ejoy/goscon
 go 1.13
 
 require (
+	github.com/coreos/etcd v3.3.10+incompatible
 	github.com/gorilla/websocket v1.5.0
 	github.com/klauspost/cpuid v1.2.1 // indirect
 	github.com/klauspost/reedsolomon v1.9.3 // indirect
