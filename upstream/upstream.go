@@ -249,7 +249,7 @@ func upgradeConn(network string, localConn net.Conn, remoteConn *scp.Conn) (conn
 // NewConn creates a new connection to target server, pair with remoteConn
 func (u *upstreams) NewConn(remoteConn *scp.Conn) (conn net.Conn, err error) {
 	//------------------------------------------
-	// 2022.3.23 停用原版从配置的主机列表获取主机
+	// 2023.3.23 停用原版从配置的主机列表获取主机
 	//------------------------------------------
 
 	// tserver := remoteConn.TargetServer()
@@ -274,7 +274,7 @@ func (u *upstreams) NewConn(remoteConn *scp.Conn) (conn net.Conn, err error) {
 	// }
 
 	//------------------------------------------------------------
-	// 2022.3.23 从discovery.go实现的接口 获取一个host:port
+	// 2023.3.23 从discovery.go实现的接口 获取一个host:port
 	//------------------------------------------------------------
 	addr := RollHost()
 	if addr == "" {

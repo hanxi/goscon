@@ -30,23 +30,23 @@ type UList struct {
 	hosts       map[string]UHost
 }
 
-func (p *UList) put(uhost UHost) {
+func (p *UList) put(host UHost) {
 	defer p.mu.Unlock()
 	p.mu.Lock()
 
-	if _, ok := p.hosts[uhost.Addr]; !ok {
-		p.totalWeight += uhost.Weight
-		p.hosts[uhost.Addr] = uhost
+	if _, ok := p.hosts[host.Addr]; !ok {
+		p.totalWeight += host.Weight
+		p.hosts[host.Addr] = host
 	}
 }
 
-func (p *UList) delete(uhost UHost) {
+func (p *UList) delete(host UHost) {
 	defer p.mu.Unlock()
 	p.mu.Lock()
 
-	if _, ok := p.hosts[uhost.Addr]; ok {
-		p.totalWeight -= uhost.Weight
-		delete(p.hosts, uhost.Addr)
+	if _host, ok := p.hosts[host.Addr]; ok {
+		p.totalWeight -= _host.Weight
+		delete(p.hosts, _host.Addr)
 	}
 }
 
@@ -81,11 +81,17 @@ func openEtcd(etcdHost string) (*clientv3.Client, error) {
 }
 
 func watchEtcd(etcdHost, etcdPrefix string, onFirstHost chan int) {
-	cli, err := openEtcd(etcdHost)
-	if err != nil {
-		glog.Errorf("connect etcd host error: %v %v", etcdHost, err)
-		time.Sleep(time.Second)
-		return
+	var cli *clientv3.Client
+	var err error
+	for {
+		cli, err = openEtcd(etcdHost)
+		if err != nil {
+			glog.Errorf("connect etcd host error: %v %v", etcdHost, err)
+			time.Sleep(time.Second)
+			continue
+		} else {
+			break
+		}
 	}
 
 	wch := cli.Watch(context.Background(), etcdPrefix, clientv3.WithPrefix())
@@ -131,6 +137,7 @@ func WatchHost() {
 	go func() {
 		for {
 			watchEtcd(etcdHost, etcdPrefix, onFirstHost)
+			onFirstHost = nil
 		}
 	}()
 
