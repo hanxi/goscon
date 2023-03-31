@@ -275,8 +275,9 @@ func (u *upstreams) NewConn(remoteConn *scp.Conn) (conn net.Conn, err error) {
 
 	//------------------------------------------------------------
 	// 2023.3.23 从discovery.go实现的接口 获取一个host:port
+	//      3.31 与特定版本逻辑服解耦 提升通用性
 	//------------------------------------------------------------
-	addr := RollHost()
+	addr := QueryHost(remoteConn.Version)
 	if addr == "" {
 		err = ErrNoHost
 		glog.Error("get host failed, cause none host is online")

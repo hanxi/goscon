@@ -72,7 +72,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// 监听主机 并在第一个主机上线后返回
+	// 监听主机(非阻塞)
 	upstream.WatchHost()
 
 	var wg sync.WaitGroup
