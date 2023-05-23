@@ -30,42 +30,44 @@ type HostRecord struct {
 	numVer uint64
 	strVer string
 	addr   string
+	key    string
 }
 
 type HostTable struct {
 	weight  int
 	numVer  uint64
-	recDict map[string]*HostRecord // key: host addr
 	recList []*HostRecord
 }
 
 func (p *HostTable) put(rec *HostRecord) {
-	if _, ok := p.recDict[rec.addr]; !ok {
-		p.weight += rec.Weight
-		p.recDict[rec.addr] = rec
-		p.recList = append(p.recList, rec)
+	for _, exist := range p.recList {
+		if exist.key == rec.key {
+			exist.addr = rec.addr
+			return
+		}
 	}
+
+	p.weight += rec.Weight
+	p.recList = append(p.recList, rec)
 }
 
-func (p *HostTable) delete(todel *HostRecord) bool {
-	if rec, ok := p.recDict[todel.addr]; ok {
-		p.weight -= rec.Weight
-		delete(p.recDict, todel.addr)
-		for i, rec := range p.recList {
-			if rec.addr == todel.addr {
-				p.recList = append(p.recList[:i], p.recList[i+1:]...)
-				return true
-			}
+func (p *HostTable) delete(key string) bool {
+	for i, rec := range p.recList {
+		if rec.key == key {
+			p.weight -= rec.Weight
+			p.recList = append(p.recList[:i], p.recList[i+1:]...)
+			return true
 		}
 	}
 	return false
 }
 
-func (p *HostTable) size() int {
-	return len(p.recList)
-}
-
 func (p *HostTable) query() string {
+	// 主机全部离线
+	if len(p.recList) == 0 {
+		return ""
+	}
+
 	// 停用按权重分配
 	// w := rand.Intn(p.weight)
 	// for _, rec := range p.records {
@@ -92,25 +94,19 @@ func (p *HostDB) put(rec *HostRecord) {
 
 	tb := p.tables[rec.strVer]
 	if tb == nil {
-		tb = &HostTable{
-			numVer:  rec.numVer,
-			recDict: map[string]*HostRecord{},
-		}
+		tb = &HostTable{numVer: rec.numVer}
 		p.tables[rec.strVer] = tb
 	}
 
 	tb.put(rec)
 }
 
-func (p *HostDB) delete(todel *HostRecord) {
+func (p *HostDB) delete(key string) {
 	defer p.mu.Unlock()
 	p.mu.Lock()
 
-	for strVer, tb := range p.tables {
-		if tb.delete(todel) {
-			if tb.size() == 0 {
-				delete(p.tables, strVer)
-			}
+	for _, tb := range p.tables {
+		if tb.delete(key) {
 			break
 		}
 	}
@@ -172,7 +168,7 @@ func toNumVer(strVer string) (uint64, error) {
 	return (uint64(major) << 32) | (uint64(minor) << 16) | uint64(revision), nil
 }
 
-func parseHost(value []byte) (*HostRecord, error) {
+func parseHost(key, value []byte) (*HostRecord, error) {
 	rec := &HostRecord{}
 	err := json.Unmarshal(value, rec)
 	if err != nil {
@@ -195,6 +191,7 @@ func parseHost(value []byte) (*HostRecord, error) {
 	rec.strVer = strVer
 	rec.numVer = numVer
 	rec.addr = fmt.Sprintf("%v:%v", rec.Host, rec.Port)
+	rec.key = string(key)
 	return rec, nil
 }
 
@@ -227,23 +224,22 @@ func watchEtcd(etcdHost, etcdPrefix string) {
 	wch := cli.Watch(context.Background(), etcdPrefix, clientv3.WithPrefix())
 	for msg := range wch {
 		for _, ev := range msg.Events {
-			rec, err := parseHost(ev.Kv.Value)
-			if err != nil {
-				glog.Errorf("etcd event decode error: %v, data: %v", err, string(ev.Kv.Value))
-				glog.Flush()
-				continue
-			}
-
 			switch ev.Type {
 			case clientv3.EventTypePut:
-				glog.Infof("PUT host %v:%v", rec.Host, rec.Port)
+				rec, err := parseHost(ev.Kv.Key, ev.Kv.Value)
+				if err != nil {
+					glog.Errorf("put event decode error: %v, key: %v, value: %v", err, string(ev.Kv.Key), string(ev.Kv.Value))
+					glog.Flush()
+					continue
+				}
+				glog.Infof("PUT host key: %v, hostport: %v:%v", string(ev.Kv.Key), rec.Host, rec.Port)
 				glog.Flush()
 				_DB.put(rec)
 
 			case clientv3.EventTypeDelete:
-				glog.Infof("DEL host %v:%v", rec.Host, rec.Port)
+				glog.Infof("DEL host %v", string(ev.Kv.Key))
 				glog.Flush()
-				_DB.delete(rec)
+				_DB.delete(string(ev.Kv.Key))
 
 			default:
 				glog.Errorf("unexpected etcd event: %v", ev.Type)
