@@ -48,4 +48,4 @@ hosts:
     addr: 127.0.0.1:11249
     weight: 100
 etcd_host: 127.0.0.1:2379
-etcd_prefix: /mt2/Devel/usergate
+etcd_prefix: /mt2/Devel/UserGate

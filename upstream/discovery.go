@@ -168,6 +168,10 @@ func toNumVer(strVer string) (uint64, error) {
 	return (uint64(major) << 32) | (uint64(minor) << 16) | uint64(revision), nil
 }
 
+func parseStrVer(s string) string {
+	return s[1:]
+}
+
 func parseHost(key, value []byte) (*HostRecord, error) {
 	rec := &HostRecord{}
 	err := json.Unmarshal(value, rec)
@@ -176,13 +180,14 @@ func parseHost(key, value []byte) (*HostRecord, error) {
 	}
 
 	// 拆分主机名
+	// fmt: One_v0.0.0_1
 	fields := strings.Split(rec.Name, "_")
 	if len(fields) != 3 {
 		return nil, errors.New("client version not found from host name")
 	}
 
-	// 从主机名中提取版本号
-	strVer := fields[2]
+	// 提取版本号
+	strVer := parseStrVer(fields[1])
 	numVer, err := toNumVer(strVer)
 	if err != nil {
 		return nil, errors.New("client version is invalid from host name")
