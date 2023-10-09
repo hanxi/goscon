@@ -22,10 +22,11 @@ var _DB HostDB = HostDB{
 }
 
 type HostRecord struct {
-	Name   string `json:"name"`
-	Host   string `json:"host"`
-	Port   int    `json:"port"`
-	Weight int    `json:"weight"`
+	Name    string `json:"name"`
+	Host    string `json:"host"`
+	Port    int    `json:"port"`
+	Weight  int    `json:"weight"`
+	Version string `json:"version"`
 
 	numVer uint64
 	strVer string
@@ -179,18 +180,11 @@ func parseHost(key, value []byte) (*HostRecord, error) {
 		return rec, err
 	}
 
-	// 拆分主机名
-	// fmt: One_v0.0.0_1
-	fields := strings.Split(rec.Name, "_")
-	if len(fields) != 3 {
-		return nil, errors.New("client version not found from host name")
-	}
-
 	// 提取版本号
-	strVer := parseStrVer(fields[1])
+	strVer := rec.Version
 	numVer, err := toNumVer(strVer)
 	if err != nil {
-		return nil, errors.New("client version is invalid from host name")
+		return nil, errors.New("client version is invalid")
 	}
 
 	rec.strVer = strVer
