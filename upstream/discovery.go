@@ -201,21 +201,54 @@ func openEtcd(etcdHost string) (*clientv3.Client, error) {
 	})
 }
 
+func getExistKeyValues(cli *clientv3.Client, etcdPrefix string) bool {
+	resp, err := cli.Get(context.Background(), etcdPrefix, clientv3.WithPrefix())
+	if err != nil {
+		glog.Errorf("GET exist key values error: %v", err)
+		glog.Flush()
+		return false
+	}
+
+	for _, kv := range resp.Kvs {
+		rec, err := parseHost(kv.Key, kv.Value)
+		if err != nil {
+			glog.Errorf("GET decode error: %v, key: %v, value: %v", err, string(kv.Key), string(kv.Value))
+			glog.Flush()
+			return false
+		}
+
+		glog.Infof("GET host key: %v, hostport: %v:%v", string(kv.Key), rec.Host, rec.Port)
+		glog.Flush()
+		_DB.put(rec)
+	}
+
+	return true
+}
+
 func watchEtcd(etcdHost, etcdPrefix string) {
 	var cli *clientv3.Client
 	var err error
+
 	for {
 		glog.Infof("begin connect etcd host %v", etcdHost)
 		glog.Flush()
+
 		cli, err = openEtcd(etcdHost)
 		if err != nil {
 			glog.Errorf("connect etcd host %v error: %v", etcdHost, err)
 			glog.Flush()
 			time.Sleep(time.Second)
 			continue
+
 		} else {
 			glog.Infof("connect etcd host %v succeed", etcdHost)
 			glog.Flush()
+
+			if !getExistKeyValues(cli, etcdPrefix) {
+				cli.Close()
+				continue
+			}
+
 			break
 		}
 	}
