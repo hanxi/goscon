@@ -3,7 +3,6 @@ package upstream
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
 	"sort"
@@ -28,15 +27,13 @@ type HostRecord struct {
 	Weight  int    `json:"weight"`
 	Version string `json:"version"`
 
-	numVer uint64
-	strVer string
-	addr   string
-	key    string
+	addr string
+	key  string
 }
 
 type HostTable struct {
 	weight  int
-	numVer  uint64
+	version string
 	recList []*HostRecord
 }
 
@@ -93,10 +90,10 @@ func (p *HostDB) put(rec *HostRecord) {
 	defer p.mu.Unlock()
 	p.mu.Lock()
 
-	tb := p.tables[rec.strVer]
+	tb := p.tables[rec.Version]
 	if tb == nil {
-		tb = &HostTable{numVer: rec.numVer}
-		p.tables[rec.strVer] = tb
+		tb = &HostTable{version: rec.Version}
+		p.tables[rec.Version] = tb
 	}
 
 	tb.put(rec)
@@ -113,7 +110,34 @@ func (p *HostDB) delete(key string) {
 	}
 }
 
-func (p *HostDB) query(strVer string) string {
+func toNumSlice(ver string) []int {
+	numSlice := []int{}
+	strSlice := strings.Split(ver, ".")
+
+	for _, s := range strSlice {
+		n, _ := strconv.Atoi(s)
+		numSlice = append(numSlice, n)
+	}
+
+	return numSlice
+}
+
+func compare(v1, v2 string) int {
+	ns1 := toNumSlice(v1)
+	ns2 := toNumSlice(v2)
+
+	for i, n := range ns1 {
+		if n > ns2[i] {
+			return 1
+		} else if n < ns2[i] {
+			return -1
+		}
+	}
+
+	return 0
+}
+
+func (p *HostDB) query(ver string) string {
 	defer p.mu.RUnlock()
 	p.mu.RLock()
 
@@ -122,18 +146,11 @@ func (p *HostDB) query(strVer string) string {
 	}
 
 	// 版本精确匹配
-	if tb := p.tables[strVer]; tb != nil {
+	if tb := p.tables[ver]; tb != nil {
 		return tb.query()
 	}
 
 	// 查找最临近的最小版本主机表
-	numVer, err := toNumVer(strVer)
-	if err != nil {
-		glog.Errorf("invalid version from client: %v", strVer)
-		glog.Flush()
-		return ""
-	}
-
 	tables := []*HostTable{}
 	for _, tb := range p.tables {
 		tables = append(tables, tb)
@@ -142,35 +159,17 @@ func (p *HostDB) query(strVer string) string {
 	sort.Slice(tables, func(i, j int) bool {
 		lop := tables[i]
 		rop := tables[j]
-		return lop.numVer > rop.numVer
+		return compare(lop.version, rop.version) == 1
 	})
 
 	for _, tb := range tables {
-		if numVer > tb.numVer {
+		if compare(ver, tb.version) == 1 {
 			return tb.query()
 		}
 	}
 
 	// 前端上传的版本号 比最小版本服还小
 	return ""
-}
-
-func toNumVer(strVer string) (uint64, error) {
-	strs := strings.Split(strVer, ".")
-	if len(strs) != 3 {
-		return 0, errors.New("invalid version string")
-	}
-
-	major, _ := strconv.Atoi(strs[0])
-	minor, _ := strconv.Atoi(strs[1])
-	revision, _ := strconv.Atoi(strs[2])
-
-	// 版本号每个分量各16bit
-	return (uint64(major) << 32) | (uint64(minor) << 16) | uint64(revision), nil
-}
-
-func parseStrVer(s string) string {
-	return s[1:]
 }
 
 func parseHost(key, value []byte) (*HostRecord, error) {
@@ -180,17 +179,9 @@ func parseHost(key, value []byte) (*HostRecord, error) {
 		return rec, err
 	}
 
-	// 提取版本号
-	strVer := rec.Version
-	numVer, err := toNumVer(strVer)
-	if err != nil {
-		return nil, errors.New("client version is invalid")
-	}
-
-	rec.strVer = strVer
-	rec.numVer = numVer
 	rec.addr = fmt.Sprintf("%v:%v", rec.Host, rec.Port)
 	rec.key = string(key)
+
 	return rec, nil
 }
 
@@ -307,6 +298,6 @@ func WatchHost() {
 	glog.Flush()
 }
 
-func QueryHost(strVer string) string {
-	return _DB.query(strVer)
+func QueryHost(ver string) string {
+	return _DB.query(ver)
 }
