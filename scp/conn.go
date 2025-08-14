@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ejoy/goscon/dh64"
+	"github.com/cloudfreexiao/goscon/dh64"
 	"github.com/xjdrew/glog"
 )
 

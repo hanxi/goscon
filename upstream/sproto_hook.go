@@ -1,3 +1,4 @@
+//go:build sproto
 // +build sproto
 
 package upstream
@@ -9,7 +10,7 @@ import (
 	"net"
 	"sync"
 
-	"github.com/ejoy/goscon/scp"
+	"github.com/cloudfreexiao/goscon/scp"
 	sproto "github.com/xjdrew/gosproto"
 )
 

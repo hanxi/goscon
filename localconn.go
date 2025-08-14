@@ -3,7 +3,7 @@ package main
 import (
 	"net"
 
-	"github.com/ejoy/goscon/scp"
+	"github.com/cloudfreexiao/goscon/scp"
 	"github.com/xjdrew/glog"
 )
 

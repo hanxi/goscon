@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ejoy/goscon/scp"
-	"github.com/ejoy/goscon/ws"
+	"github.com/cloudfreexiao/goscon/scp"
+	"github.com/cloudfreexiao/goscon/ws"
 	"github.com/xtaci/kcp-go"
 )
 

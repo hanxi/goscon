@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ejoy/goscon/scp"
-	"github.com/ejoy/goscon/upstream"
+	"github.com/cloudfreexiao/goscon/scp"
+	"github.com/cloudfreexiao/goscon/upstream"
 	"github.com/spf13/viper"
 	"github.com/xjdrew/glog"
 	yaml "gopkg.in/yaml.v2"

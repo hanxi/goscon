@@ -4,7 +4,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/ejoy/goscon/ws"
+	"github.com/cloudfreexiao/goscon/ws"
 	"github.com/gorilla/websocket"
 	"github.com/spf13/viper"
 	"github.com/xjdrew/glog"

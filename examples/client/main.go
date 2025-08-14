@@ -15,8 +15,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/ejoy/goscon/scp"
-	"github.com/ejoy/goscon/ws"
+	"github.com/cloudfreexiao/goscon/scp"
+	"github.com/cloudfreexiao/goscon/ws"
 	"github.com/xjdrew/glog"
 	sproto "github.com/xjdrew/gosproto"
 	"github.com/xtaci/kcp-go"
@@ -126,7 +126,7 @@ func Dial(network, connect string) (net.Conn, error) {
 	} else if network == "ws" {
 		return ws.Dial(connect)
 	} else {
-		return nil, errors.New("Invalid network")
+		return nil, errors.New("invalid network")
 	}
 }
 

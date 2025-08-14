@@ -3,7 +3,7 @@ package upstream
 import (
 	"net"
 
-	"github.com/ejoy/goscon/scp"
+	"github.com/cloudfreexiao/goscon/scp"
 )
 
 // Hook defines hook interface for upstream

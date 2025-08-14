@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ejoy/goscon/scp"
+	"github.com/cloudfreexiao/goscon/scp"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

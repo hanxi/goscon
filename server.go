@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ejoy/goscon/scp"
-	"github.com/ejoy/goscon/upstream"
+	"github.com/cloudfreexiao/goscon/scp"
+	"github.com/cloudfreexiao/goscon/upstream"
 	"github.com/xjdrew/glog"
 )
 
