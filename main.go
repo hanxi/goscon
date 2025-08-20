@@ -12,6 +12,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/cloudfreexiao/goscon/upstream"
 	"github.com/spf13/viper"
 	"github.com/xjdrew/glog"
 )
@@ -70,6 +71,9 @@ func main() {
 		glog.Errorf("start manager failed: err=%s", err.Error())
 		os.Exit(1)
 	}
+
+	// 监听主机(非阻塞)
+	upstream.WatchHost()
 
 	var wg sync.WaitGroup
 

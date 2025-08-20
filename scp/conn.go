@@ -151,6 +151,9 @@ type Conn struct {
 
 	reused bool // reused conn
 	resend int  // resend data length
+
+	// 2023.3.31
+	Version string // 前端版本号
 }
 
 func (c *Conn) initNewConn(id int, secret leu64) {
@@ -409,6 +412,9 @@ func (c *Conn) serverNewHandshake(nq *newConnReq) error {
 	c.config.TargetServer = nq.targetServer
 	// set config flag
 	c.config.Flag = nq.flag
+
+	// 2023.3.31 关联前端版本号
+	c.Version = nq.version
 	return nil
 }
 
