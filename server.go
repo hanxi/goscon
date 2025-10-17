@@ -204,7 +204,7 @@ func (ss *SCPServer) onNewConn(scon *scp.Conn) bool {
 	return true
 }
 
-func (ss *SCPServer) handleConn(conn net.Conn) {
+func (ss *SCPServer) handleConn(conn net.Conn, connType string) {
 	connectionAccepts.Inc()
 
 	defer func() {
@@ -215,7 +215,11 @@ func (ss *SCPServer) handleConn(conn net.Conn) {
 		}
 	}()
 
-	scon := scp.Server(conn, &scp.Config{ScpServer: ss})
+	disableCipher := connType == "ws"
+	scon := scp.Server(conn, &scp.Config{
+		ScpServer:     ss,
+		DisableCipher: disableCipher,
+	})
 
 	err := scon.Handshake()
 
@@ -234,7 +238,7 @@ func (ss *SCPServer) handleConn(conn net.Conn) {
 }
 
 // Serve accepts incoming connections on the Listener l
-func (ss *SCPServer) Serve(l net.Listener) error {
+func (ss *SCPServer) Serve(l net.Listener, connType string) error {
 	addr := l.Addr().String()
 	glog.Infof("serve: addr=%s", addr)
 
@@ -265,6 +269,6 @@ func (ss *SCPServer) Serve(l net.Listener) error {
 			glog.Infof("accept new connection: client=%s", conn.RemoteAddr())
 		}
 
-		go ss.handleConn(conn)
+		go ss.handleConn(conn, connType)
 	}
 }
