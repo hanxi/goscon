@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/hex"
-	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -31,16 +29,14 @@ func pump(id int, tag string, dst net.Conn, src net.Conn, ch chan<- int) error {
 
 	for {
 		nr, er := src.Read(buf)
-		// if glog.V(2) {
-		fmt.Printf("recv packet: id=%d, tag=%s, addr=%s, sz=%d, err=%v\n", id, tag, src.RemoteAddr(), nr, er)
-		// }
+		if glog.V(2) {
+			glog.Infof("recv packet: id=%d, tag=%s, addr=%s, sz=%d, err=%v\n", id, tag, src.RemoteAddr(), nr, er)
+		}
 		if nr > 0 {
-			fmt.Printf("Hex dump:\n%s\n", hex.Dump(buf[:nr]))
-
 			nw, ew := dst.Write(buf[0:nr])
-			// if glog.V(2) {
-			fmt.Printf("send packet: id=%d, tag=%s, addr=%s, sz=%d, err=%v\n", id, tag, dst.RemoteAddr(), nw, ew)
-			// }
+			if glog.V(2) {
+				glog.Infof("send packet: id=%d, tag=%s, addr=%s, sz=%d, err=%v\n", id, tag, dst.RemoteAddr(), nw, ew)
+			}
 			if nw > 0 {
 				packets++
 				written += nw
@@ -56,9 +52,9 @@ func pump(id int, tag string, dst net.Conn, src net.Conn, ch chan<- int) error {
 		}
 	}
 
-	// if glog.V(1) {
-	fmt.Printf("pair pump: id=%d, tag=%s, addr1=%s, addr2=%s, err=%v\n", id, tag, src.RemoteAddr(), dst.RemoteAddr(), err)
-	// }
+	if glog.V(1) {
+		glog.Infof("pair pump: id=%d, tag=%s, addr1=%s, addr2=%s, err=%v\n", id, tag, src.RemoteAddr(), dst.RemoteAddr(), err)
+	}
 
 	src.Close()
 	dst.Close()
