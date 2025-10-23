@@ -2,10 +2,8 @@ package ws
 
 import (
 	"context"
-	"encoding/hex"
 	"io"
 	"net"
-	"runtime/debug"
 	"time"
 
 	"github.com/gorilla/websocket"
