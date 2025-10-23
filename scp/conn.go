@@ -79,6 +79,8 @@ func (c *cipherConnWriter) Write(b []byte) (int, error) {
 	space := buf.Bytes()[:sz]
 	if c.cipher != nil {
 		c.cipher.XORKeyStream(space, b)
+	} else {
+		copy(space, b)
 	}
 	c.count += sz
 	_, err := c.wr.Write(space)
