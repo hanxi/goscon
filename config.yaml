@@ -44,6 +44,9 @@ hosts:
   - name: game1
     addr: 127.0.0.1:7012
     weight: 100
+  - name: game2
+    addr: 127.0.0.1:7022
+    weight: 100
   # - name: test2
   #   addr: 127.0.0.1:11249
   #   weight: 100
