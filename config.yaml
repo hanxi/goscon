@@ -41,10 +41,10 @@ upstream_option:
 #    prefix: mail.
 #    pattern : google
 hosts:
-  - name: game1
+  - name: role1
     addr: 127.0.0.1:7012
     weight: 100
-  - name: game2
+  - name: role2
     addr: 127.0.0.1:7022
     weight: 100
   # - name: test2
